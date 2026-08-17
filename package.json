@@ -1,0 +1,88 @@
+{
+  "name": "command-run-vscode",
+  "displayName": "command-run-vscode",
+  "description": "command-run-vscode",
+  "version": "0.0.1",
+  "publisher": "ZhengWei513",
+  "author": {
+    "name": "ZhengWei513"
+  },
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/j787701730/command-run-vscode"
+  },
+  "icon": "./images/icon.png",
+  "engines": {
+    "vscode": "^1.106.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "command-run-vscode.run",
+        "title": "command-run-vscode.run",
+        "icon": "$(play)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "command-run-vscode.run",
+          "group": "navigation@1",
+          "when": "editorIsOpen"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "command-run-vscode",
+      "properties": {
+        "commandRunVscode.command": {
+          "type": "string",
+          "description": "默认命令配置",
+          "default": "npm run dev"
+        },
+        "commandRunVscode.commandList": {
+          "type": "array",
+          "default": [],
+          "description": "自定义命令列表",
+          "scope": "workspace",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.106.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "typescript-eslint": "^8.48.1",
+    "eslint": "^9.39.1",
+    "esbuild": "^0.27.1",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.3",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}
