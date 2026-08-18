@@ -2,7 +2,7 @@
   "name": "command-run-vscode",
   "displayName": "command-run-vscode",
   "description": "command-run-vscode",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "ZhengWei513",
   "author": {
     "name": "ZhengWei513"
@@ -44,13 +44,13 @@
       "properties": {
         "commandRunVscode.command": {
           "type": "string",
-          "description": "默认命令配置",
+          "description": "默认命令配置(编辑器右上角图标)",
           "default": "npm run dev"
         },
         "commandRunVscode.commandList": {
           "type": "array",
           "default": [],
-          "description": "自定义命令列表",
+          "description": "自定义命令列表(状态栏图标 QuickPick / tooltip)",
           "scope": "workspace",
           "items": {
             "type": "string"

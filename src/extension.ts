@@ -56,27 +56,30 @@ const runCommand = async () => {
 
 const drawTooltip = () => {
   const res = getWorkspaceSetting();
+  const command: string = res.get<string>('command', 'npm run dev');
+  const t1: string[] = [];
+  if (command) {
+    t1.push(command, '---');
+  }
   // 获取字符串配置值，第二个参数是兜底默认值
-  const commandList = res
-    .get<string[]>('commandList', [])
+  const commandList = [...t1, res.get<string[]>('commandList', [])]
     .map((el) => `${el || ''}`.trim())
     .filter((item) => item);
 
   // console.log('commandList', commandList);
 
-  const t = commandList.map(
-    (el) =>
-      `- [$(play) ${el}](command:command-run-vscode.runTooltip?${encodeURIComponent(
-        JSON.stringify({
-          command: el,
-        }),
-      )})`,
-  );
-  t.push('- [$(refresh) 刷新命令列表](command:command-run-vscode.refreshTooltip)');
+  const t = commandList.map((el) => {
+    if (el === '---') {
+      return el;
+    }
+    return `- [$(play) ${el}](command:command-run-vscode.runTooltip?${encodeURIComponent(
+      JSON.stringify({ command: el }),
+    )})`;
+  });
 
   const tooltip = new vscode.MarkdownString(
     `
-  ## command-run-vscode
+  ## command-run-vscode [$(refresh)](command:command-run-vscode.refreshTooltip)
   ---
   ${t.join('\n')}
   `,
@@ -99,22 +102,81 @@ export async function activate(context: vscode.ExtensionContext) {
   statusBarItem.text = statusBarItemText;
   drawTooltip();
 
-  statusBarItem.command = 'command-run-vscode.run'; // 点击触发的命令
+  statusBarItem.command = 'command-run-vscode.clickStatusBar'; // 点击触发的命令
 
   // ========== 3. 显示状态栏 ==========
   statusBarItem.show();
 
+  const clickDisposable = vscode.commands.registerCommand('command-run-vscode.clickStatusBar', () => {
+    // 弹出带命令的快速选择菜单
+    const quickPick = vscode.window.createQuickPick();
+    quickPick.title = 'command-run-vscode';
+
+    const res = getWorkspaceSetting();
+    const command: string = res.get<string>('command', 'npm run dev');
+
+    // 获取字符串配置值，第二个参数是兜底默认值
+    const commandList = [command, res.get<string[]>('commandList', [])]
+      .map((el) => `${el || ''}`.trim())
+      .filter((item) => item && item !== '---');
+
+    /** 更新快速选择菜单项 */
+    const updateItems = () => {
+      quickPick.items = commandList.map((el) => ({
+        // 使用 主题 图标
+        iconPath: new vscode.ThemeIcon('play'),
+        label: el,
+        // detail: el.fsPath,
+        // buttons: [
+        //   // { iconPath: new vscode.ThemeIcon('play'), tooltip: '运行' },
+        //   { iconPath: new vscode.ThemeIcon('close'), tooltip: '删除记录' },
+        // ],
+      }));
+    };
+    updateItems();
+
+    // 标签栏添加按钮
+    // quickPick.buttons = [{ iconPath: new vscode.ThemeIcon('refresh'), tooltip: '刷新' }];
+    // quickPick.onDidTriggerButton(async (button) => {
+    //   // console.log(button);
+    //   clearRecentFiles();
+    //   updateItems();
+    // });
+
+    // quickPick.onDidTriggerItemButton((button) => {
+    //   // console.log('onDidTriggerItemButton', button);
+    //   if (button.button.tooltip === '删除记录') {
+    //     const fsPath = button.item.description;
+    //     if (fsPath && typeof fsPath === 'string') {
+    //       removeRecentFiles(fsPath);
+    //       updateItems();
+    //     }
+    //   }
+    // });
+
+    quickPick.onDidChangeSelection(async (selection) => {
+      if (selection[0]) {
+        const label = selection[0].label;
+        openTerminal(label);
+        quickPick.dispose();
+      }
+    });
+    quickPick.onDidHide(() => quickPick.dispose());
+    quickPick.show();
+  });
+
   // ========== 4. 注册状态栏点击的自定义命令 ==========
   const refreshCommand = vscode.commands.registerCommand('command-run-vscode.run', async () => {
+    runCommand();
     // 点击事件逻辑：刷新组件缓存
-    await vscode.window.withProgress(
-      { location: vscode.ProgressLocation.Notification, title: '正在运行命令...' },
-      async () => {
-        try {
-          await runCommand();
-        } catch (error) {}
-      },
-    );
+    // await vscode.window.withProgress(
+    //   { location: vscode.ProgressLocation.Notification, title: '正在运行命令...' },
+    //   async () => {
+    //     try {
+    //       await runCommand();
+    //     } catch (error) {}
+    //   },
+    // );
   });
 
   // 刷新命令列表
@@ -130,12 +192,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // 监听配置文件变化
   const changeConfig = vscode.workspace.onDidChangeConfiguration(async (e) => {
-    if (e.affectsConfiguration('commandRunVscode.commandList')) {
+    if (e.affectsConfiguration('commandRunVscode.commandList') || e.affectsConfiguration('commandRunVscode.command')) {
       drawTooltip();
     }
   });
 
-  context.subscriptions.push(refreshCommand, refreshTooltip, runTooltip, changeConfig);
+  context.subscriptions.push(refreshCommand, refreshTooltip, runTooltip, changeConfig, clickDisposable);
 }
 
 // This method is called when your extension is deactivated
