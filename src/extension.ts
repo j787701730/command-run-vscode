@@ -62,7 +62,7 @@ const drawTooltip = () => {
     t1.push(command, '---');
   }
   // 获取字符串配置值，第二个参数是兜底默认值
-  const commandList = [...t1, res.get<string[]>('commandList', [])]
+  const commandList = [...t1, ...res.get<string[]>('commandList', [])]
     .map((el) => `${el || ''}`.trim())
     .filter((item) => item);
 
@@ -116,7 +116,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const command: string = res.get<string>('command', 'npm run dev');
 
     // 获取字符串配置值，第二个参数是兜底默认值
-    const commandList = [command, res.get<string[]>('commandList', [])]
+    const commandList = [command, ...res.get<string[]>('commandList', [])]
       .map((el) => `${el || ''}`.trim())
       .filter((item) => item && item !== '---');
 

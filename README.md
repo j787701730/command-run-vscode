@@ -31,6 +31,12 @@
 
 `npm init -y`
 
+### 安装所有包
+
+`npm i`
+
+`pnpm i`
+
 ### 更新所有包
 
 `npm update`
