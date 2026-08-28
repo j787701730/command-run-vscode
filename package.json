@@ -2,7 +2,7 @@
   "name": "command-run-vscode",
   "displayName": "command-run-vscode",
   "description": "command-run-vscode",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "ZhengWei513",
   "author": {
     "name": "ZhengWei513"
@@ -28,12 +28,22 @@
         "command": "command-run-vscode.run",
         "title": "command-run-vscode.run",
         "icon": "$(play)"
+      },
+      {
+        "command": "command-run-vscode.runCurrentFile",
+        "title": "command-run-vscode.runCurrentFile",
+        "icon": "$(play-circle)"
       }
     ],
     "menus": {
       "editor/title": [
         {
           "command": "command-run-vscode.run",
+          "group": "navigation@1",
+          "when": "editorIsOpen"
+        },
+        {
+          "command": "command-run-vscode.runCurrentFile",
           "group": "navigation@1",
           "when": "editorIsOpen"
         }
@@ -55,6 +65,12 @@
           "items": {
             "type": "string"
           }
+        },
+        "commandRunVscode.commandCurrentFile": {
+          "type": "string",
+          "default": "node {path}",
+          "description": "运行当前文件命令配置(编辑器右上角图标) {path}",
+          "scope": "workspace"
         }
       }
     }

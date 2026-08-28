@@ -50,7 +50,50 @@ const runCommand = async () => {
   if (runCommand) {
     openTerminal(runCommand);
   } else {
-    vscode.window.showErrorMessage('请先默认命令配置！');
+    vscode.window.showErrorMessage('请先配置默认命令配置！');
+  }
+};
+
+let runCurrentFileTerminal: vscode.Terminal;
+
+const runCurrentFileCommand = async () => {
+  // 获取当前激活的文本编辑器
+  const editor = vscode.window.activeTextEditor;
+  if (editor) {
+    // 文件 Uri
+    const uri = editor.document.uri;
+
+    // 👉 完整本地磁盘路径（字符串）
+    const filePath = uri.fsPath;
+
+    // 文件相对工作区路径
+    const workspaceFolder = vscode.workspace.getWorkspaceFolder(uri);
+    if (workspaceFolder) {
+      const relativePath = vscode.workspace.asRelativePath(uri);
+
+      const res = getWorkspaceSetting();
+      // 获取字符串配置值，第二个参数是兜底默认值
+      const runCommand: string = res.get<string>('commandCurrentFile', 'npm {path}');
+      if (runCommand) {
+        if (!runCurrentFileTerminal) {
+          // 1.新建终端，cwd 设置为工作区根目录
+          runCurrentFileTerminal = vscode.window.createTerminal({
+            // name: 'command-run-vscode', // 终端标签名称
+            // cwd: workspaceFolder.uri.fsPath, // 工作区根路径！关键
+            // shellPath:"powershell.exe" // windows可选指定shell
+          });
+        }
+        // 2.显示终端面板
+        runCurrentFileTerminal.show();
+        // 3.发送命令执行，默认自动回车执行
+        runCurrentFileTerminal.sendText(runCommand.replaceAll('{path}', relativePath));
+      } else {
+        vscode.window.showErrorMessage('请先配置运行当前文件命令配置！');
+      }
+    }
+  } else {
+    // 没有打开编辑器
+    vscode.window.showInformationMessage('没有打开任何文件');
   }
 };
 
@@ -179,6 +222,10 @@ export async function activate(context: vscode.ExtensionContext) {
     // );
   });
 
+  const runCurrentFile = vscode.commands.registerCommand('command-run-vscode.runCurrentFile', async () => {
+    runCurrentFileCommand();
+  });
+
   // 刷新命令列表
   const refreshTooltip = vscode.commands.registerCommand('command-run-vscode.refreshTooltip', async () => {
     drawTooltip();
@@ -197,7 +244,7 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  context.subscriptions.push(refreshCommand, refreshTooltip, runTooltip, changeConfig, clickDisposable);
+  context.subscriptions.push(refreshCommand, refreshTooltip, runTooltip, changeConfig, clickDisposable, runCurrentFile);
 }
 
 // This method is called when your extension is deactivated
